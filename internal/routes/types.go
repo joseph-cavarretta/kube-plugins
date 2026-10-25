@@ -5,3 +5,7 @@ type Route struct {
 	Ingress   string
 	Host      string
 }
+
+func (r Route) TabularRows() [][]string {
+	return [][]string{{r.Namespace, r.Ingress, r.Host}}
+}
