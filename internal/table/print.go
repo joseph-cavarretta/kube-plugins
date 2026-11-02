@@ -7,7 +7,7 @@ import (
 	"text/tabwriter"
 )
 
-// tab character string
+// Tab character string
 const tab = "\t"
 
 // Default tabwriter parameters

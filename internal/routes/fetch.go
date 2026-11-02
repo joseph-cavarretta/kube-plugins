@@ -9,6 +9,7 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Fetch lists ingresses in every namespace
 func Fetch(
 	ctx context.Context,
 	client kubernetes.Interface,
