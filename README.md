@@ -55,8 +55,3 @@ go test ./...
 ```
 
 Built with `client-go` v0.33, matching Kubernetes 1.33.
-
-## Planned
-
-- `kubectl routes`: join each ingress to its service, ready endpoints and Traefik middleware, and warn about broken links
-- `kubectl capacity`: per-node requests, limits and usage, with a check for whether a workload fits
