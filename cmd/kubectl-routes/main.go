@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"text/tabwriter"
 
 	"github.com/spf13/pflag"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/cli-runtime/pkg/genericclioptions"
-	"k8s.io/client-go/kubernetes"
+
+	"github.com/joseph-cavarretta/kube-plugins/internal/kube"
+	"github.com/joseph-cavarretta/kube-plugins/internal/routes"
+	"github.com/joseph-cavarretta/kube-plugins/internal/table"
 )
 
 func main() {
@@ -20,39 +20,25 @@ func main() {
 }
 
 func run() error {
-	configFlags := genericclioptions.NewConfigFlags(true)
 	flags := pflag.NewFlagSet("kubectl-routes", pflag.ExitOnError)
-	configFlags.AddFlags(flags)
+	configFlags := kube.AddFlags(flags)
 
 	if err := flags.Parse(os.Args[1:]); err != nil {
 		return err
 	}
 
-	restConfig, err := configFlags.ToRESTConfig()
+	client, err := kube.NewClient(configFlags)
 	if err != nil {
-		return fmt.Errorf("failed to get REST config: %w", err)
+		return err
 	}
 
-	client, err := kubernetes.NewForConfig(restConfig)
+	ingresses, err := routes.Fetch(context.Background(), client)
 	if err != nil {
-		return fmt.Errorf("failed to create client: %w", err)
+		return err
 	}
 
-	ingresses, err := client.NetworkingV1().
-		Ingresses("").
-		List(context.Background(), metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed to list ingresses: %w", err)
-	}
-
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "NAMESPACE\tINGRESS\tHOST")
-	for _, ing := range ingresses.Items {
-		for _, rule := range ing.Spec.Rules {
-			fmt.Fprintf(w, "%s\t%s\t%s\n", ing.Namespace, ing.Name, rule.Host)
-		}
-	}
-	w.Flush()
-
-	return nil
+	rows := routes.Build(ingresses)
+	return table.PrintTable(
+		os.Stdout, routes.Headers(), rows,
+	)
 }
